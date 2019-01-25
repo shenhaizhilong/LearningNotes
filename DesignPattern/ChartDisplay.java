@@ -1,4 +1,4 @@
-package DesignPattern.AbstractFactory;
+package DesignPattern;
 
 public class ChartDisplay extends AbstractChart {
 

@@ -1,4 +1,4 @@
-package DesignPattern.Factory;
+package DesignPattern.AbstractFactory;
 
 public interface IProvider {
 

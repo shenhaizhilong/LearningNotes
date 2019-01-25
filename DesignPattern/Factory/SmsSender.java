@@ -1,6 +1,8 @@
 package DesignPattern.Factory;
 
-public class SmsSender  implements ISender{
+import DesignPattern.AbstractFactory.ISender;
+
+public class SmsSender  implements ISender {
 
     @Override
     public void send() {

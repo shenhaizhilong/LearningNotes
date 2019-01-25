@@ -1,6 +1,6 @@
-package DesignPattern.Factory;
+package DesignPattern.AbstractFactory;
 
-import DesignPattern.AbstractFactory.AbstractCustomer;
+
 
 public class EmailSender {
 

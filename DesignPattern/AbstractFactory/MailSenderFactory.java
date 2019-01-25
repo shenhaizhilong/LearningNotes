@@ -1,4 +1,6 @@
-package DesignPattern.Factory;
+package DesignPattern.AbstractFactory;
+
+import DesignPattern.Factory.MailSender;
 
 public class MailSenderFactory implements IProvider {
 

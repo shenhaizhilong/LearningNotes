@@ -1,7 +1,7 @@
 package DesignPattern;
 
 import DesignPattern.Builder.Builder;
-import DesignPattern.Factory.ISender;
+import DesignPattern.AbstractFactory.ISender;
 
 import java.util.List;
 

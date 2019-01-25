@@ -1,8 +1,4 @@
-package DesignPattern.Factory;
-
-import DesignPattern.AbstractFactory.AbstractCustomer;
-import DesignPattern.AbstractFactory.CommonCustomer;
-import DesignPattern.AbstractFactory.VipCustomer;
+package DesignPattern.AbstractFactory;
 
 public class EmailSenderDemo {
     public static void main(String[] args) {

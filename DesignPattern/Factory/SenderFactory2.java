@@ -1,5 +1,7 @@
 package DesignPattern.Factory;
 
+import DesignPattern.AbstractFactory.ISender;
+
 public class SenderFactory2 {
 
     public static ISender produceMail()

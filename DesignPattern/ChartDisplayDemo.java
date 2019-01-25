@@ -1,7 +1,4 @@
-package DesignPattern.AbstractFactory;
-
-
-import DesignPattern.Factory.ChartDisplay;
+package DesignPattern;
 
 public class ChartDisplayDemo {
     public static void main(String[] args) {

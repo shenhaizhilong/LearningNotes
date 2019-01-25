@@ -1,6 +1,6 @@
 package DesignPattern.Builder;
 
-import DesignPattern.Factory.ISender;
+import DesignPattern.AbstractFactory.ISender;
 import DesignPattern.Factory.MailSender;
 import DesignPattern.Factory.SmsSender;
 

@@ -1,5 +1,7 @@
 package DesignPattern.Factory;
 
+import DesignPattern.AbstractFactory.ISender;
+
 /**
  * Factory method
  */
