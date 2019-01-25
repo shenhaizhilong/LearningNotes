@@ -1,14 +1,25 @@
+# 原型模式 Prototype
+> 顾名思义，以某一个对象作为原型，对其进行复制、克隆、拷贝，产生一个和原对象类似的新对象。 复制对象是通过实现clonable 接口的clone() 方法的。
+> 派生类的clone() 方法中，调用super.clone()
+> clone() 返回Object 对象
+> **浅拷贝**：将一个对象复制后，基本数据类型的变量都会重新创建，而引用类型，指向的还是原对象所指向的。
+> **深拷贝**：将一个对象复制后，不论是基本数据类型还有引用类型，都是重新创建的。简单来说，就是深拷贝进行了完全彻底的复制，而浅拷贝不彻底。
+
+**clone() 方法满足**:
+
+*  1. 对任何对象x，都有x.clone() != x，即克隆对象与原对象不是同一个对象
+*  2. 对任何对象x, 都有x.clone().getClass() == x.getClass(), 即克隆对象与原型对象的类型一样
+*  3. x.clone().equals(x) == true
+
+```java
 package DesignPattern.Prototype;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
 
 public class Prototype implements Cloneable, Serializable {
 
     private static final long serialVersionUID = 2147483647l;
     private String name;
-    private List<Integer> list = new ArrayList<>();
     private SerializableObject obj;
 
     public void setName(String name) {
@@ -17,15 +28,6 @@ public class Prototype implements Cloneable, Serializable {
 
     public String getName() {
         return name;
-    }
-    public void add(int val)
-    {
-        list.add(val);
-    }
-
-    public void printList()
-    {
-        System.out.println(list);
     }
 
     public void setObj(SerializableObject obj) {
@@ -37,7 +39,7 @@ public class Prototype implements Cloneable, Serializable {
     }
 
 
-    // 浅拷贝
+    // 浅拷贝,如果没定义clone() 方法而调用了该方法，会抛出cloneNotSupportedException 
     public Object clone() throws CloneNotSupportedException
     {
         Prototype prototype = (Prototype)super.clone();
@@ -47,6 +49,8 @@ public class Prototype implements Cloneable, Serializable {
     // 深拷贝
     public Object deepClone() throws  ClassNotFoundException,  IOException
     {
+
+		// The ByteArrayOutputStream class stream creates a buffer in memory and all the data sent to the stream is stored in the buffer.
 
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
@@ -64,3 +68,6 @@ public class Prototype implements Cloneable, Serializable {
         private static final long serialVersionUID = 2147483647;
     }
 }
+
+
+```
