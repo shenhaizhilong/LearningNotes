@@ -136,19 +136,20 @@ public class PrototypeTest {
 ## Output:
 ___
 
-2133927002
-1836019240
-false
-prototype name: changed prototype
-prototype2 name:demo1
-prototype 1 list
-[10, 100]
-prototype 2 list
-[10, 100]
-*****************
-2133927002
-1854731462
-prototype 1 list
-[10, 100, 1000]
-prototype 3 list
-[10, 100]
+	2133927002
+	1836019240
+	false
+	prototype name: changed prototype
+	prototype2 name:demo1
+	prototype 1 list
+	[10, 100]
+	prototype 2 list
+	[10, 100]
+	*****************
+	2133927002
+	1854731462
+	prototype 1 list
+	[10, 100, 1000]
+	prototype 3 list
+	10,100
+
