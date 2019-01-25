@@ -16,12 +16,12 @@ import java.util.concurrent.Executors;
  */
 
 // final class
-public final class HungrySingleton {
+public final class EagerSingleton {
     // just create a single instance
-    private static final HungrySingleton singleton = new HungrySingleton();
+    private static final EagerSingleton singleton = new EagerSingleton();
 
     // private constructor， forbidden to  call construction out side of this class
-    private HungrySingleton()
+    private EagerSingleton()
     {
         // 禁止通过反射实例化
         if(singleton != null)
@@ -30,7 +30,7 @@ public final class HungrySingleton {
         }
     }
 
-    public static HungrySingleton getSingleton()
+    public static EagerSingleton getSingleton()
     {
         try {
             Random random = new Random();
@@ -47,7 +47,7 @@ public final class HungrySingleton {
         Runnable task = new Runnable() {
             @Override
             public void run() {
-                HungrySingleton singleton = HungrySingleton.getSingleton();
+                EagerSingleton singleton = EagerSingleton.getSingleton();
                 System.out.println(singleton.hashCode());
             }
         };
