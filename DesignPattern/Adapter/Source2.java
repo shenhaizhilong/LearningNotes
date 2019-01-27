@@ -1,4 +1,4 @@
-package DesignPattern;
+package DesignPattern.Adapter;
 
 public class Source2 implements ISourceable2 {
 

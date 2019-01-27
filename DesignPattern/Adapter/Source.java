@@ -1,4 +1,4 @@
-package DesignPattern;
+package DesignPattern.Adapter;
 
 public class Source {
     public void method1()

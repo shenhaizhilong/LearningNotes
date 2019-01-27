@@ -20,11 +20,10 @@ ___
 
 * 一、创建型
     * 1. 单例（Singleton）
-    * 2. 简单工厂（Simple Factory）
-    * 3. 工厂方法（Factory Method）
-    * 4. 抽象工厂（Abstract Factory）
-    * 5. 建造者（Builder）
-    * 6. 原型模式（Prototype）
+    * 2. 工厂方法（Factory Method）
+    * 3. 抽象工厂（Abstract Factory）
+    * 4. 建造者（Builder）
+    * 5. 原型模式（Prototype）
 * 二、行为型
     * 1. 责任链（Chain Of Responsibility）
     * 2. 命令（Command）

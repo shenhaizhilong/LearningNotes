@@ -1,4 +1,4 @@
-package DesignPattern;
+package DesignPattern.Adapter;
 
 
 public class Adapter extends Source implements ITarget {

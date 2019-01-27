@@ -4,4 +4,4 @@
 
 <div align="center"> <img src="pics/AbstractFactory.jpg"/> </div><br>
 
-**添加VoiceSender 后只需要添加VoiceSenderFactory 即可，其他类保持不变**
+**添加VoiceSender 后只需要添加VoiceSenderFactory 即可，其他类保持不变,扩展性很好**
