@@ -1,4 +1,4 @@
-源自[CyC2018](https://github.com/CyC2018/CS-Notes)
+源自[CyC2018](https://github.com/CyC2018/CS-Notes) 并做了大量修改
 <!-- GFM-TOC -->
 * [一、线程状态转换](#一线程状态转换)
     * [新建（New）](#新建new)
@@ -63,54 +63,76 @@
 # 一、线程状态转换
 
 <div align="center"> <img src="pics/ace830df-9919-48ca-91b5-60b193f593d2.png" width=""/> </div><br>
+> 线程状态是枚举
+```java
 
-## 新建（New）
+  public enum State {
+        /**
+         * Thread state for a thread which has not yet started.
+         * 
+         */
+        NEW,
 
-创建后尚未启动。
+        /**
+         * Thread state for a runnable thread.  A thread in the runnable
+         * state is executing in the Java virtual machine but it may
+         * be waiting for other resources from the operating system
+         * such as processor.
+         */
+        RUNNABLE,
 
-## 可运行（Runnable）
+        /**
+         * Thread state for a thread blocked waiting for a monitor lock.
+         * A thread in the blocked state is waiting for a monitor lock
+         * to enter a synchronized block/method or
+         * reenter a synchronized block/method after calling
+         * {@link Object#wait() Object.wait}.
+         */
+        BLOCKED,
 
-可能正在运行，也可能正在等待 CPU 时间片。
+        /**
+         * Thread state for a waiting thread.
+         * A thread is in the waiting state due to calling one of the
+         * following methods:
+         * <ul>
+         *   <li>{@link Object#wait() Object.wait} with no timeout</li>
+         *   <li>{@link #join() Thread.join} with no timeout</li>
+         *   <li>{@link LockSupport#park() LockSupport.park}</li>
+         * </ul>
+         *
+         * <p>A thread in the waiting state is waiting for another thread to
+         * perform a particular action.
+         *
+         * For example, a thread that has called <tt>Object.wait()</tt>
+         * on an object is waiting for another thread to call
+         * <tt>Object.notify()</tt> or <tt>Object.notifyAll()</tt> on
+         * that object. A thread that has called <tt>Thread.join()</tt>
+         * is waiting for a specified thread to terminate.
+         */
+        WAITING,
 
-包含了操作系统线程状态中的 Running 和 Ready。
+        /**
+         * Thread state for a waiting thread with a specified waiting time.
+         * A thread is in the timed waiting state due to calling one of
+         * the following methods with a specified positive waiting time:
+         * <ul>
+         *   <li>{@link #sleep Thread.sleep}</li>
+         *   <li>{@link Object#wait(long) Object.wait} with timeout</li>
+         *   <li>{@link #join(long) Thread.join} with timeout</li>
+         *   <li>{@link LockSupport#parkNanos LockSupport.parkNanos}</li>
+         *   <li>{@link LockSupport#parkUntil LockSupport.parkUntil}</li>
+         * </ul>
+         */
+        TIMED_WAITING,
 
-## 阻塞（Blocking）
+        /**
+         * Thread state for a terminated thread.
+         * The thread has completed execution.
+         */
+        TERMINATED;
+    }
+```
 
-等待获取一个排它锁，如果其线程释放了锁就会结束此状态。
-
-## 无限期等待（Waiting）
-
-等待其它线程显式地唤醒，否则不会被分配 CPU 时间片。
-
-| 进入方法 | 退出方法 |
-| --- | --- |
-| 没有设置 Timeout 参数的 Object.wait() 方法 | Object.notify() / Object.notifyAll() |
-| 没有设置 Timeout 参数的 Thread.join() 方法 | 被调用的线程执行完毕 |
-| LockSupport.park() 方法 | - |
-
-## 限期等待（Timed Waiting）
-
-无需等待其它线程显式地唤醒，在一定时间之后会被系统自动唤醒。
-
-调用 Thread.sleep() 方法使线程进入限期等待状态时，常常用“使一个线程睡眠”进行描述。
-
-调用 Object.wait() 方法使线程进入限期等待或者无限期等待时，常常用“挂起一个线程”进行描述。
-
-睡眠和挂起是用来描述行为，而阻塞和等待用来描述状态。
-
-阻塞和等待的区别在于，阻塞是被动的，它是在等待获取一个排它锁。而等待是主动的，通过调用 Thread.sleep() 和 Object.wait() 等方法进入。
-
-| 进入方法 | 退出方法 |
-| --- | --- |
-| Thread.sleep() 方法 | 时间结束 |
-| 设置了 Timeout 参数的 Object.wait() 方法 | 时间结束 / Object.notify() / Object.notifyAll()  |
-| 设置了 Timeout 参数的 Thread.join() 方法 | 时间结束 / 被调用的线程执行完毕 |
-| LockSupport.parkNanos() 方法 | - |
-| LockSupport.parkUntil() 方法 | - |
-
-## 死亡（Terminated）
-
-可以是线程结束任务之后自己结束，或者产生了异常而结束。
 
 # 二、使用线程
 
@@ -147,6 +169,10 @@ public static void main(String[] args) {
 ## 实现 Callable 接口
 
 与 Runnable 相比，Callable 可以有返回值，返回值通过 FutureTask 进行封装。
+FutureTask 泛型类实现了RunnableFuture 接口，RunnableFuture 接口继承了Runnable 与Future 接口
+<div align="center"> <img src="pics/FutureTask.jpg" width=""/> </div><br>
+
+
 
 ```java
 public class MyCallable implements Callable<Integer> {
@@ -193,6 +219,7 @@ public static void main(String[] args) {
 
 - Java 不支持多重继承，因此继承了 Thread 类就无法继承其它类，但是可以实现多个接口；
 - 类可能只要求可执行就行，继承整个 Thread 类开销过大。
+- 易于扩展
 
 # 三、基础线程机制
 
@@ -200,21 +227,115 @@ public static void main(String[] args) {
 
 Executor 管理多个异步任务的执行，而无需程序员显式地管理线程的生命周期。这里的异步是指多个任务的执行互不干扰，不需要进行同步操作。
 
-主要有三种 Executor：
+常用的线程池：
 
-- CachedThreadPool：一个任务创建一个线程；
-- FixedThreadPool：所有任务只能使用固定大小的线程；
-- SingleThreadExecutor：相当于大小为 1 的 FixedThreadPool。
+- newCachedThreadPool：自动缩放的线程池，当线程池中有可有的线程时，直接重用；若没有，会新建线程并添加到线程池；空闲超过60秒的线程会自动终止，并从线程池中移除；使用于生命期短的异步任务；
+- newFixedThreadPool：新建一个有固定数量的线程的线程池；若没有线程可用，新添加的任务只能在队列里面等待；若某个线程意外终结，则新建一个线程来替换它；线程池里面的线程会一直存活直到被shutdown；
+- newSingleThreadExecutor：相当于大小为 1 的 FixedThreadPool。
+- newScheduledThreadPool: 计划任务的线程池，延迟执行或者是定期执行
+
 
 ```java
+
 public static void main(String[] args) {
-    ExecutorService executorService = Executors.newCachedThreadPool();
-    for (int i = 0; i < 5; i++) {
-        executorService.execute(new MyRunnable());
+        Runnable task = new Runnable() {
+            @Override
+            public void run() {
+                try
+                {
+                    System.out.println("Thread: " + Thread.currentThread().getId() + "  sleep 1s");
+                    Thread.sleep(1000);
+                }catch (InterruptedException ex)
+                {
+                    ex.printStackTrace();
+                }
+            }
+        };
+
+        ExecutorService service = Executors.newCachedThreadPool();
+        for (int i = 0; i < 10; i++) {
+            service.submit(task);
+        }
+        service.shutdown();
+
     }
-    executorService.shutdown();
 }
+
+
 ```
+## WorkStealingPool
+JDK 1.8 引入了WorkStealingPool, parallelism 为并发级别，默认为系统的cpu 核数Runtime.getRuntime().availableProcessors()
+
+work stealing 算法是在现代线程池中用于减少竞争的一种技术。
+经典的线程池只有一个队列，线程池的每个线程需要锁定队列、出列一个任务和解锁队列。如果任务很多且执行的时间很短，线程之间的竞争就会很激烈。
+现代的线程池采用work stealing 算法-每个线程都有自己的队列，当这个线程比较空闲，其他的线程很繁忙的时候，这个线程会从繁忙线程的队列里面窃取任务。这样就减少了竞争和提升了性能。
+<div align="center"> <img src="pics/workStealing.png" width=""/> </div><br>
+
+
+```java
+
+  public static ExecutorService newWorkStealingPool(int parallelism) {
+        return new ForkJoinPool
+            (parallelism,
+             ForkJoinPool.defaultForkJoinWorkerThreadFactory,
+             null, true);
+    }
+
+    public static ExecutorService newWorkStealingPool() {
+        return new ForkJoinPool
+            (Runtime.getRuntime().availableProcessors(),
+             ForkJoinPool.defaultForkJoinWorkerThreadFactory,
+             null, true);
+    }
+
+public class WorkStealingPoolDemo {
+
+    public static void main(String[] args) throws InterruptedException {
+
+
+        ExecutorService service = Executors.newWorkStealingPool(2);
+        List<Callable<String>> callableList = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            final int number = i +1;
+            Callable<String> call = new Callable<String>() {
+                @Override
+                public String call() throws Exception {
+                    Date date = new Date();
+                    Thread.sleep(2000); // this task will cost 2s
+                    return "Thread " + Thread.currentThread().getName() + ", Id " + Thread.currentThread().getId() + ", finish task:" + number + ", time  " + date.toString();
+
+                }
+            };
+            callableList.add(call);
+        }
+
+        service.invokeAll(callableList).stream()
+                .map(stringFuture -> {
+                    try {
+                        return stringFuture.get();
+                    }catch (Exception ex)
+                    {
+                        throw new IllegalStateException(ex);
+                    }
+                }).forEach(System.out::println);
+
+    }
+}
+
+outPut:
+Thread ForkJoinPool-1-worker-1, Id 11, finish task:1, time  Tue Jan 29 22:29:17 GMT+08:00 2019
+Thread ForkJoinPool-1-worker-0, Id 12, finish task:2, time  Tue Jan 29 22:29:17 GMT+08:00 2019
+Thread ForkJoinPool-1-worker-0, Id 12, finish task:3, time  Tue Jan 29 22:29:19 GMT+08:00 2019
+Thread ForkJoinPool-1-worker-1, Id 11, finish task:4, time  Tue Jan 29 22:29:19 GMT+08:00 2019
+Thread ForkJoinPool-1-worker-1, Id 11, finish task:5, time  Tue Jan 29 22:29:21 GMT+08:00 2019
+Thread ForkJoinPool-1-worker-0, Id 12, finish task:6, time  Tue Jan 29 22:29:21 GMT+08:00 2019
+Thread ForkJoinPool-1-worker-0, Id 12, finish task:7, time  Tue Jan 29 22:29:23 GMT+08:00 2019
+Thread ForkJoinPool-1-worker-1, Id 11, finish task:8, time  Tue Jan 29 22:29:23 GMT+08:00 2019
+Thread ForkJoinPool-1-worker-1, Id 11, finish task:9, time  Tue Jan 29 22:29:25 GMT+08:00 2019
+Thread ForkJoinPool-1-worker-0, Id 12, finish task:10, time  Tue Jan 29 22:29:25 GMT+08:00 2019
+
+```
+
 
 ## Daemon
 
@@ -311,18 +432,48 @@ java.lang.InterruptedException: sleep interrupted
 但是调用 interrupt() 方法会设置线程的中断标记，此时调用 interrupted() 方法会返回 true。因此可以在循环体中使用 interrupted() 方法来判断线程是否处于中断状态，从而提前结束线程。
 
 ```java
-public class InterruptExample {
+ public static void main(String[] args) throws InterruptedException {
 
-    private static class MyThread2 extends Thread {
-        @Override
-        public void run() {
-            while (!interrupted()) {
-                // ..
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                while (true)
+                {
+                    if(Thread.currentThread().isInterrupted())
+                    {
+                        System.out.println("current thread was interrupted");
+                        break;
+                    }
+                    try{
+						System.out.println("sleeping 2s");
+                        Thread.sleep(2000);
+                    }catch (InterruptedException ex)
+                    {
+                        System.out.println("Interrupted when thread is sleeping");
+                        //Thread.currentThread().interrupt(); // 如果注释这一行会无限循环,必须再次对当前线程设置中断
+                        // 原因是抛出异常会清除中断标记，如果不加处理那么下一次循环，就无法捕获这个中断
+                    }
+                    Thread.yield();
+                }
             }
-            System.out.println("Thread end");
-        }
+        };
+
+        Thread thread = new Thread(runnable);
+        thread.start();
+        Thread.sleep(1000);
+        thread.interrupt();
     }
-}
+
+
+output:
+无限循环
+sleeping 2s
+Interrupted when thread is sleeping
+sleeping 2s
+sleeping 2s
+sleeping 2s
+sleeping 2s
+
 ```
 
 ```java
@@ -339,7 +490,7 @@ Thread end
 
 ## Executor 的中断操作
 
-调用 Executor 的 shutdown() 方法会等待线程都执行完毕之后再关闭，但是如果调用的是 shutdownNow() 方法，则相当于调用每个线程的 interrupt() 方法。
+调用 Executor 的 shutdown() 方法会等待线程都执行完毕之后再关闭，# 但是如果调用的是 shutdownNow() 方法，则相当于调用每个线程的 interrupt() 方法。 #
 
 以下使用 Lambda 创建线程，相当于创建了一个匿名内部线程。
 
@@ -1637,3 +1788,5 @@ JDK 1.6 引入了偏向锁和轻量级锁，从而让锁拥有了四个状态：
 - [JAVA FORK JOIN EXAMPLE](http://www.javacreed.com/java-fork-join-example/ "Java Fork Join Example")
 - [聊聊并发（八）——Fork/Join 框架介绍](http://ifeve.com/talk-concurrency-forkjoin/)
 - [Eliminating SynchronizationRelated Atomic Operations with Biased Locking and Bulk Rebiasing](http://www.oracle.com/technetwork/java/javase/tech/biasedlocking-oopsla2006-preso-150106.pdf)
+- [forkjoinpool](https://stackoverflow.com/questions/41337451/detailed-difference-between-java8-forkjoinpool-and-executors-newworkstealingpool)
+- [newworkstealingpools](https://dzone.com/articles/diving-into-java-8s-newworkstealingpools)

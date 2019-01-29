@@ -19,6 +19,7 @@ public class InterruptTest {
                         break;
                     }
                     try{
+                        System.out.println("sleeping 2s");
                         Thread.sleep(2000);
                     }catch (InterruptedException ex)
                     {
