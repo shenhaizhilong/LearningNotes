@@ -63,10 +63,12 @@
 # 一、线程状态转换
 
 <div align="center"> <img src="pics/ace830df-9919-48ca-91b5-60b193f593d2.png" width=""/> </div><br>
-> 线程状态是枚举
+
+线程状态是枚举
+
 ```java
 
-  public enum State {
+  	public enum State {
         /**
          * Thread state for a thread which has not yet started.
          * 
@@ -132,7 +134,6 @@
         TERMINATED;
     }
 ```
-
 
 # 二、使用线程
 
