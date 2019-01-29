@@ -67,6 +67,12 @@ public class DogAdapter implements Cat {
 ## 应用实例
 
 - java.util.Arrays#asList()
+
+ ```java
+public static <T> List<T> asList(T... a) {
+        return new ArrayList<>(a);
+    }
+```
 - java.util.Collections#list()
 
 ##  参考文献

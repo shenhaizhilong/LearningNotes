@@ -19,31 +19,19 @@ ___
 <!-- GFM-TOC -->
 
 * 一、创建型
-    * 1. 单例（Singleton）
-    * 2. 工厂方法（Factory Method）
-    * 3. 抽象工厂（Abstract Factory）
-    * 4. 建造者（Builder）
-    * 5. 原型模式（Prototype）
+    * 1. [单例](Singleton.md)
+    * 2. [工厂方法](FactoryMethod.md)
+    * 3. [抽象工厂](AbstractFactory.md)
+    * 4. [建造者](Builder.md)
+    * 5. [原型模式](Prototype.md)
 * 二、行为型
-    * 1. 责任链（Chain Of Responsibility）
-    * 2. 命令（Command）
-    * 3. 解释器（Interpreter）
-    * 4. 迭代器（Iterator）
-    * 5. 中介者（Mediator）
-    * 6. 备忘录（Memento）
-    * 7. 观察者（Observer）
-    * 8. 状态（State）
-    * 9. 策略（Strategy）
-    * 10. 模板方法（Template Method）
-    * 11. 访问者（Visitor）
+    * 1. [责任链](/RequestLink/PurchaseRequest.java)
+    * 2. [迭代器](Iterator.md)
 * 三、结构型
-    * 1. 适配器（Adapter）
-    * 2. 桥接（Bridge）
-    * 3. 组合（Composite）
-    * 4. 装饰（Decorator）
-    * 5. 外观（Facade）
-    * 6. 享元（Flyweight）
-    * 7. 代理（Proxy）
+    * 1. [适配器](Adapter.md)
+    * 2. [装饰](Decorator.md)
+    * 3. [享元](FlyWeight.md)
+    * 4. [代理](Proxy.md)
 
 <!-- GFM-TOC -->
 
