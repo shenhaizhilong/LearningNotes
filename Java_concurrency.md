@@ -56,6 +56,7 @@
     * [轻量级锁](#轻量级锁)
     * [偏向锁](#偏向锁)
 * [十三、多线程开发良好的实践](#十三多线程开发良好的实践)
+* [十四、 死锁分析](#死锁分析)
 * [参考资料](#参考资料)
 <!-- GFM-TOC -->
 
@@ -580,6 +581,7 @@ future.cancel(true);
 # 五、互斥同步
 
 Java 提供了两种锁机制来控制多个线程对共享资源的互斥访问，第一个是 JVM 实现的 synchronized，而另一个是 JDK 实现的 ReentrantLock。
+例：厕所只有一个茅坑，我先进去，然后加锁，你无法进入，只能在外面等待；等我用完之后，我释放锁，你再进入
 
 ## synchronized 
 
@@ -928,6 +930,7 @@ public class ReadWriteLockDemo {
 在线程中调用另一个线程的 join() 方法，会将当前线程挂起，而不是忙等待，直到目标线程结束。
 
 对于以下代码，虽然 b 线程先启动，但是因为在 b 线程中调用了 a 线程的 join() 方法，b 线程会等待 a 线程结束才继续执行，因此最后能够保证 a 线程的输出先于 b 线程的输出。
+例：我完成之后你再执行，你可能需要我计算完成后的数据
 
 ```java
 public class JoinExample {
@@ -1010,6 +1013,7 @@ public class JoinDemo {
 调用 wait() 使得线程等待某个条件满足，线程在等待时会被挂起，当其他线程的运行使得这个条件满足时，其它线程会调用 notify() 或者 notifyAll() 来唤醒挂起的线程。
 
 它们都属于 Object 的一部分，而不属于 Thread。
+例：我是A 线程，你是B 线程，我先走，我到达某一指定地方的时候，我在那里等待你的通知，你通知我后，我再继续运行
 
 # 只能用在同步方法或者同步控制块中使用，否则会在运行时抛出 IllegalMonitorStateException。 #
 
@@ -1113,6 +1117,7 @@ java.util.concurrent 类库中提供了 Condition 类来实现线程之间的协
 相比于 wait() 这种等待方式，await() 可以指定等待的条件，因此更加灵活。
 
 使用 Lock 来获取一个 Condition 对象。
+例：我是A 线程，你是B 线程，我先走，我到达某一指定地方的时候，我在那里等待你的通知，你通知我后，我再继续运行
 
 ```java
 public class AwaitSignalExample {
@@ -1228,6 +1233,7 @@ java.util.concurrent（J.U.C）大大提高了并发性能，AQS 被认为是 J.
 用来控制一个线程等待多个线程。
 
 维护了一个计数器 cnt，每次调用 countDown() 方法会让计数器的值减 1，减到 0 的时候，那些因为调用 await() 方法而在等待的线程就会被唤醒。
+例子：火箭的发射，需要很多检查任务，每次完成一个检查任务计数器就减一，当为0 的时候所有任务都完成了，火箭发射
 
 <div align="center"> <img src="pics/CountdownLatch.png" width=""/> </div><br>
 
@@ -1281,9 +1287,10 @@ fire!
 
 和 CountdownLatch 相似，都是通过维护计数器来实现的。线程执行 await() 方法之后计数器会减 1，并进行等待，直到计数器为 0，所有调用 await() 方法而在等待的线程才能继续执行。
 
-CyclicBarrier 和 CountdownLatch 的一个区别是，CyclicBarrier 的计数器通过调用 reset() 方法可以循环使用，所以它才叫做循环屏障。
+CyclicBarrier 和 CountdownLatch 的一个区别是，CyclicBarrier 的计数器通过调用 reset() 方法可以循环使用，所以它才叫做循环屏障,CountDownLatch 只能使用一次
 
-CyclicBarrier 有两个构造函数，其中 parties 指示计数器的初始值，barrierAction 在所有线程都到达屏障的时候会执行一次。
+CyclicBarrier 有两个构造函数，其中 parties 指示计数器的初始值， 在所有线程都到达屏障的时候会执行一次barrierAction。
+就像举行一个聚会，人到齐了才开始；也像爬山，所有的人爬到一个小亭子的时候，大家纷纷食物、饮料，然后再继续爬山
 
 ```java
 public CyclicBarrier(int parties, Runnable barrierAction) {
@@ -1321,7 +1328,7 @@ public class CyclicBarrierDemo {
             });
         }
 
-        barrier.reset();
+        barrier.reset();// 循环使用
         for (int i = 0; i < count; i++) {
             service.execute(()-> {
                 try{
@@ -1367,6 +1374,7 @@ Semaphore 类似于操作系统中的信号量，可以控制对互斥资源的�
 <div align="center"> <img src="pics/Semaphore.png" width=""/> </div><br>
 
 以下代码模拟了对某个服务的并发请求，每次只能有 3 个客户端同时访问，请求总数为 10。
+例：假设厕所只有五个茅坑，同时只能有五个人用（五个线程）；A进入,茅坑的可用数量减一；当为0时，其他人无法进入，在外面等待；当A使用完毕，释放茅坑后，茅坑的可用数量加一，这样其他人就可以竞争这个茅坑了
 
 ```java
 public class SemaphoreExample {
@@ -1395,6 +1403,118 @@ public class SemaphoreExample {
 
 ```html
 2 1 2 2 2 2 2 1 2 2
+```
+
+例二
+同时只有五个线程可以进入代码临界区
+
+```java
+public class SemaphoreDemo {
+    private static final Semaphore semp = new Semaphore(5);
+    private static class Task implements Runnable
+    {
+        @Override
+        public void run() {
+            try
+            {
+                semp.acquire();
+                Date date = new Date();
+                System.out.println(" Thread " + Thread.currentThread().getId() + " running " + date.toString() );
+                Thread.sleep(2000);
+                semp.release();
+            }catch (InterruptedException ex)
+            {
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+
+        Task task = new Task();
+        ExecutorService executorService = Executors.newFixedThreadPool(20);
+        for (int i = 0; i < 20; i++) {
+            executorService.submit(task);
+        }
+
+        executorService.shutdown();
+    }
+}
+
+```
+
+```html
+ Thread 13 running Wed Jan 30 12:15:27 GMT+08:00 2019
+ Thread 11 running Wed Jan 30 12:15:27 GMT+08:00 2019
+ Thread 12 running Wed Jan 30 12:15:27 GMT+08:00 2019
+ Thread 15 running Wed Jan 30 12:15:27 GMT+08:00 2019
+ Thread 14 running Wed Jan 30 12:15:27 GMT+08:00 2019
+ Thread 16 running Wed Jan 30 12:15:29 GMT+08:00 2019
+ Thread 18 running Wed Jan 30 12:15:29 GMT+08:00 2019
+ Thread 17 running Wed Jan 30 12:15:29 GMT+08:00 2019
+ Thread 19 running Wed Jan 30 12:15:29 GMT+08:00 2019
+ Thread 20 running Wed Jan 30 12:15:29 GMT+08:00 2019
+```
+
+## Exchanger 
+
+> 交换器，设置一个交换点，两个线程达到交换点就可以交换数据。
+
+用户A 有一个apple，用户B 有一个banana; 当两个线程分别到达交换点的时候，它们就可以交换数据，可以用于数据校对（银行流水校对，防止出错）
+
+```java
+
+public class ExchangerDemo {
+    private static final Exchanger<String>  exchanger = new Exchanger<>();
+
+    private static class UserA implements Runnable
+    {
+        @Override
+        public void run() {
+            String str = "an apple";
+            System.out.println(Thread.currentThread().getId() +" I have " + str);
+            try
+            {
+                str = exchanger.exchange(str); 
+                System.out.println( Thread.currentThread().getId() + " after exchange I have " + str);
+            }catch (InterruptedException ex)
+            {
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    private static class UserB implements Runnable
+    {
+        @Override
+        public void run() {
+            String str = "a banana";
+            System.out.println(Thread.currentThread().getId() + " I have " + str);
+            try
+            {
+                str = exchanger.exchange(str);
+                System.out.println(Thread.currentThread().getId() +" after exchange I have " + str);
+            }catch (InterruptedException ex)
+            {
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        new Thread(new UserA()).start();
+        new Thread(new UserB()).start();
+    }
+}
+
+
+output：
+
+11 I have an apple
+12 I have a banana
+11 after exchange I have a banana
+12 after exchange I have an apple
+
 ```
 
 # 八、J.U.C - 其它组件
@@ -1464,103 +1584,106 @@ java.util.concurrent.BlockingQueue 接口有以下阻塞队列的实现：
 
 ```java
 public class ProducerConsumer {
-
-    private static BlockingQueue<String> queue = new ArrayBlockingQueue<>(5);
-
-    private static class Producer extends Thread {
+    private static BlockingQueue<Integer> blockingQueue = new LinkedBlockingDeque<>();
+    private static AtomicInteger atomicInteger = new AtomicInteger(0);
+    private static class Producer extends Thread
+    {
         @Override
         public void run() {
-            try {
-                queue.put("product");
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            try
+            {
+                for (int i = 0; i < 10; i++) {
+                   int val = atomicInteger.incrementAndGet();
+                    blockingQueue.put(val);
+                    System.out.println("produce : " + val);
+                }
+            }catch (InterruptedException ex)
+            {
+                ex.printStackTrace();
             }
-            System.out.print("produce..");
+
         }
     }
 
-    private static class Consumer extends Thread {
-
+    private static class Consumer extends Thread
+    {
         @Override
         public void run() {
-            try {
-                String product = queue.take();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            while (atomicInteger.intValue() > 0)
+            {
+                System.out.println("consume : " + blockingQueue.poll());
+                atomicInteger.getAndDecrement();
             }
-            System.out.print("consume..");
+        }
+    }
+
+    public static void main(String[] args) {
+        for (int i = 0; i < 10; i++) {
+            Producer producer = new Producer();
+            producer.start();
+        }
+
+        for (int i = 0; i < 5; i++) {
+            Consumer consumer = new Consumer();
+            consumer.start();
         }
     }
 }
+
 ```
 
-```java
-public static void main(String[] args) {
-    for (int i = 0; i < 2; i++) {
-        Producer producer = new Producer();
-        producer.start();
-    }
-    for (int i = 0; i < 5; i++) {
-        Consumer consumer = new Consumer();
-        consumer.start();
-    }
-    for (int i = 0; i < 3; i++) {
-        Producer producer = new Producer();
-        producer.start();
-    }
-}
-```
-
-```html
-produce..produce..consume..consume..produce..consume..produce..consume..produce..consume..
-```
 
 ## ForkJoin
 
 主要用于并行计算中，和 MapReduce 原理类似，都是把大的计算任务拆分成多个小任务并行计算。
 
 ```java
-public class ForkJoinExample extends RecursiveTask<Integer> {
+public class ForkJoinDemo extends RecursiveTask<Long> {
 
-    private final int threshold = 5;
-    private int first;
-    private int last;
-
-    public ForkJoinExample(int first, int last) {
-        this.first = first;
-        this.last = last;
+    private final long threshold = 100000;
+    private long start, end;
+    public ForkJoinDemo(long start, long end)
+    {
+        this.start = start;
+        this.end = end;
     }
 
     @Override
-    protected Integer compute() {
-        int result = 0;
-        if (last - first <= threshold) {
-            // 任务足够小则直接计算
-            for (int i = first; i <= last; i++) {
-                result += i;
+    protected Long compute() {
+        long ans = 0;
+        if(end - start <= threshold)
+        {
+            for(long i = start; i <= end; i++)
+            {
+                ans += i;
             }
-        } else {
-            // 拆分成小任务
-            int middle = first + (last - first) / 2;
-            ForkJoinExample leftTask = new ForkJoinExample(first, middle);
-            ForkJoinExample rightTask = new ForkJoinExample(middle + 1, last);
+        }else {
+            long mid = (start + end) >>> 1;
+            ForkJoinDemo leftTask = new ForkJoinDemo(start, mid);
+            ForkJoinDemo rightTask = new ForkJoinDemo(mid +1, end);
             leftTask.fork();
             rightTask.fork();
-            result = leftTask.join() + rightTask.join();
+            ans = leftTask.join() + rightTask.join();
         }
-        return result;
+        return ans;
+    }
+
+    public static void main(String[] args) {
+        ForkJoinDemo forkJoinDemo = new ForkJoinDemo(0, Integer.MAX_VALUE);
+        ForkJoinPool pool = new ForkJoinPool();
+        Future<Long> ans = pool.submit(forkJoinDemo);
+        try
+        {
+            System.out.println(ans.get());
+        }catch (InterruptedException | ExecutionException ex)
+        {
+            ex.printStackTrace();
+        }
+
     }
 }
 ```
 
-```java
-public static void main(String[] args) throws ExecutionException, InterruptedException {
-    ForkJoinExample example = new ForkJoinExample(1, 10000);
-    ForkJoinPool forkJoinPool = new ForkJoinPool();
-    Future result = forkJoinPool.submit(example);
-    System.out.println(result.get());
-}
-```
 
 ForkJoin 使用 ForkJoinPool 来启动，它是一个特殊的线程池，线程数量取决于 CPU 核数。
 
@@ -1762,7 +1885,7 @@ volatile 关键字通过添加内存屏障的方式来禁止指令重排，即�
 
 也可以通过 synchronized 来保证有序性，它保证每个时刻只有一个线程执行同步代码，相当于是让线程顺序执行同步代码。
 
-## 先行发生原则
+## 先行发生原则 happen-before 
 
 上面提到了可以用 volatile 和 synchronized 来保证有序性。除此之外，JVM 还规定了先行发生原则，让一个操作无需控制就能先于另一个操作完成。
 
@@ -2079,9 +2202,9 @@ ThreadLocal 从理论上讲并不是用来解决多线程并发问题的，因�
 
 ## 自旋锁
 
-互斥同步进入阻塞状态的开销都很大，应该尽量避免。在许多应用中，共享数据的锁定状态只会持续很短的一段时间。自旋锁的思想是让一个线程在请求一个共享数据的锁时执行忙循环（自旋）一段时间，如果在这段时间内能获得锁，就可以避免进入阻塞状态。
+互斥同步进入阻塞状态的开销都很大，应该尽量避免。在许多应用中，共享数据的锁定状态只会持续很短的一段时间。自旋锁的思想是让一个线程在请求一个共享数据的锁时执行空循环（自旋）一段时间，如果在这段时间内能获得锁，就可以避免进入阻塞状态。
 
-自旋锁虽然能避免进入阻塞状态从而减少开销，但是它需要进行忙循环操作占用 CPU 时间，它只适用于共享数据的锁定状态很短的场景。
+自旋锁虽然能避免进入阻塞状态从而减少开销，但是它需要进行空循环操作占用 CPU 时间，它只适用于共享数据的锁定状态很短的场景。
 
 在 JDK 1.6 中引入了自适应的自旋锁。自适应意味着自旋的次数不再固定了，而是由前一次在同一个锁上的自旋次数及锁的拥有者的状态来决定。
 
@@ -2165,6 +2288,141 @@ JDK 1.6 引入了偏向锁和轻量级锁，从而让锁拥有了四个状态：
 
 - 使用线程池而不是直接创建线程，这是因为创建线程代价很高，线程池可以有效地利用有限的线程来启动任务。
 
+# 十四、 死锁分析
+
+死锁： A 线程锁定了obj1, 想要锁定obj2； B 线程锁定了obj2, 想要锁定obj1; 此时线程A 在等待B 线程释放锁，而B线程在等待A线程释放锁；A 线程和B 线程都在等待，如果没有外力干预的话，将永远等待下去，即死锁
+
+```java 
+public class DeadLock {
+
+    private static final Object obj1 = new Object();
+    private static final Object obj2 = new Object();
+
+    private static class WorkerA implements Runnable
+    {
+        @Override
+        public void run() {
+            synchronized (obj1)
+            {
+                System.out.println("Thead A get the lock on obj1, try to get the lock on obj2 ");
+                try
+                {
+                    Thread.sleep(1000);
+                    synchronized (obj2)
+                    {
+                        System.out.println("Thead A get the lock on obj1 and obj2 ");
+                    }
+                }catch (InterruptedException ex)
+                {
+                    ex.printStackTrace();
+                }
+            }
+        }
+    }
+
+    private static class WorkerB implements Runnable
+    {
+        @Override
+        public void run() {
+            synchronized (obj2)
+            {
+                System.out.println("Thead B get the lock on obj2, try to get the lock on obj1 ");
+                try
+                {
+                    Thread.sleep(1000);
+                    synchronized (obj1)
+                    {
+                        System.out.println("Thead B get the lock on obj2 and obj1 ");
+                    }
+                }catch (InterruptedException ex)
+                {
+                    ex.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        Thread threadA = new Thread(new WorkerA(), "Worker A Thread");
+        Thread threadB = new Thread(new WorkerB(), "Worker B Thread");
+        threadA.start();
+        threadB.start();
+    }
+}
+
+```
+## jstack 分析死锁 ##
+```html
+
+
+
+Found one Java-level deadlock:
+=============================
+"Worker B Thread":
+  waiting to lock monitor 0x0000000002dccb78 (object 0x00000000d7f95418, a java.lang.Object),
+  which is held by "Worker A Thread"
+"Worker A Thread":
+  waiting to lock monitor 0x0000000002dca2e8 (object 0x00000000d7f95428, a java.lang.Object),
+  which is held by "Worker B Thread"
+
+Java stack information for the threads listed above:
+===================================================
+"Worker B Thread":
+        at JavaConcurrent.DeadLock$WorkerB.run(DeadLock.java:46)
+        - waiting to lock <0x00000000d7f95418> (a java.lang.Object)
+        - locked <0x00000000d7f95428> (a java.lang.Object)
+        at java.lang.Thread.run(Thread.java:748)
+"Worker A Thread":
+        at JavaConcurrent.DeadLock$WorkerA.run(DeadLock.java:24)
+        - waiting to lock <0x00000000d7f95428> (a java.lang.Object)
+        - locked <0x00000000d7f95418> (a java.lang.Object)
+        at java.lang.Thread.run(Thread.java:748)
+
+Found 1 deadlock.
+```
+## jconsole 分析死锁 ##
+
+jconsole -> thread -> 检测死锁
+<div align="center"> <img src="pics/DeadLock.jpg" /> </div><br>
+
+## jvisualVm 分析死锁 ##
+
+<div align="center"> <img src="pics/deadlockJVM.jpg" /> </div><br>
+thread dump  - > same with jstack 
+```html
+
+Found one Java-level deadlock:
+=============================
+"Worker B Thread":
+  waiting to lock monitor 0x0000000002dccb78 (object 0x00000000d8488da8, a java.lang.Object),
+  which is held by "Worker A Thread"
+"Worker A Thread":
+  waiting to lock monitor 0x0000000002dca2e8 (object 0x00000000d8490710, a java.lang.Object),
+  which is held by "Worker B Thread"
+
+Java stack information for the threads listed above:
+===================================================
+"Worker B Thread":
+        at JavaConcurrent.DeadLock$WorkerB.run(DeadLock.java:46)
+        - waiting to lock <0x00000000d8488da8> (a java.lang.Object)
+        - locked <0x00000000d8490710> (a java.lang.Object)
+        at java.lang.Thread.run(Thread.java:748)
+"Worker A Thread":
+        at JavaConcurrent.DeadLock$WorkerA.run(DeadLock.java:24)
+        - waiting to lock <0x00000000d8490710> (a java.lang.Object)
+        - locked <0x00000000d8488da8> (a java.lang.Object)
+        at java.lang.Thread.run(Thread.java:748)
+
+Found 1 deadlock.
+
+```
+## 死锁预防##
+
+1、以确定的顺序获得锁： 所有线程锁定的顺序要一致，可以规定锁定 obj1, 然后在锁定obj2
+2、超时放弃，避免无限等待： 当使用synchronized关键词提供的内置锁时，只要线程没有获得锁，那么就会永远等待下去，然而Lock接口提供了boolean tryLock(long time, TimeUnit unit) throws InterruptedException方法，该方法可以按照固定时长等待锁，因此线程可以在获取锁超时以后，主动释放之前已经获得的所有的锁。通过这种方式，也可以很有效地避免死锁。
+3、只锁定需要的：锁的粒度尽量小，你使用哪部分，就锁定哪部分
+4、避免嵌套锁 
+
 # 参考资料
 
 - BruceEckel. Java 编程思想: 第 4 版 [M]. 机械工业出版社, 2007.
@@ -2184,3 +2442,5 @@ JDK 1.6 引入了偏向锁和轻量级锁，从而让锁拥有了四个状态：
 - [Eliminating SynchronizationRelated Atomic Operations with Biased Locking and Bulk Rebiasing](http://www.oracle.com/technetwork/java/javase/tech/biasedlocking-oopsla2006-preso-150106.pdf)
 - [forkjoinpool](https://stackoverflow.com/questions/41337451/detailed-difference-between-java8-forkjoinpool-and-executors-newworkstealingpool)
 - [newworkstealingpools](https://dzone.com/articles/diving-into-java-8s-newworkstealingpools)
+- [DeadLock](https://juejin.im/post/5aaf6ee76fb9a028d3753534)
+- [Deadlock in java example](https://www.journaldev.com/1058/deadlock-in-java-example)

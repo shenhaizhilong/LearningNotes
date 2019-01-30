@@ -1,5 +1,6 @@
 package JavaConcurrent;
 
+import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
@@ -17,7 +18,8 @@ public class SemaphoreDemo {
             try
             {
                 semp.acquire();
-                System.out.println(" Thread " + Thread.currentThread().getId() + " running");
+                Date date = new Date();
+                System.out.println(" Thread " + Thread.currentThread().getId() + " running " + date.toString() );
                 Thread.sleep(2000);
                 semp.release();
             }catch (InterruptedException ex)

@@ -29,7 +29,7 @@ public class CyclicBarrierDemo {
             });
         }
 
-        barrier.reset();
+        barrier.reset();  // 循环使用
         for (int i = 0; i < count; i++) {
             service.execute(()-> {
                 try{
