@@ -21,7 +21,9 @@ public class ReadWriteLockDemo {
         try
         {
             currLock.lock();
+            System.out.println("Thread id:" + Thread.currentThread().getId() +  " Read thread get the lock, and do this job");
             Thread.sleep(1000);
+            System.out.println("Thread id:" + Thread.currentThread().getId() +  " this job cost 1s");
         }catch (InterruptedException ex)
         {
             ex.printStackTrace();
@@ -37,7 +39,9 @@ public class ReadWriteLockDemo {
         {
             currLock.lock();
             value = index;
+            System.out.println("Thread id:" + Thread.currentThread().getId() +  " write thread get the lock, and do this job");
             Thread.sleep(1000);
+            System.out.println("Thread id:" + Thread.currentThread().getId() +  " this job cost 1s");
         }catch (InterruptedException ex)
         {
             ex.printStackTrace();
@@ -52,25 +56,25 @@ public class ReadWriteLockDemo {
         Runnable read = new Runnable() {
             @Override
             public void run() {
-              //  readWriteLockDemo.handleRead(readLock);
-                readWriteLockDemo.handleRead(lock);
+                readWriteLockDemo.handleRead(readLock);  // 读锁
+             //   readWriteLockDemo.handleRead(lock);  // 重入锁
             }
         };
 
         Runnable write = new Runnable() {
             @Override
             public void run() {
-              //  readWriteLockDemo.handleWrite(writeLock, new Random().nextInt());
-                readWriteLockDemo.handleWrite(lock, new Random().nextInt());
+                readWriteLockDemo.handleWrite(writeLock, new Random().nextInt()); // 写锁
+              //  readWriteLockDemo.handleWrite(lock, new Random().nextInt());  //重入锁
             }
         };
 
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < 10; i++) {
             new Thread(read).start();
         }
-
         for (int i = 0; i < 5; i++) {
             new Thread(write).start();
         }
+
     }
 }

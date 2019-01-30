@@ -20,8 +20,10 @@ public class JoinDemo {
     public static void main(String[] args) throws InterruptedException {
         Increase increase = new Increase();
         increase.start();
+        // 主线程别急，等我干完活，你再继续；否则，你就等着吧！
         increase.join(); // after running thread increase, then print counter, if no join() counter will be zero;
         // increase not have enough time to run
+
         System.out.println("counter = " + counter);
     }
 }

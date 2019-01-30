@@ -16,7 +16,7 @@ public class WaitNotifyDemo {
                 try
                 {
                     System.out.println("Started Waiting: " +  System.currentTimeMillis());
-                    object.wait();
+                    object.wait();  // 必须通知我，我才干活;不通知，不干活,哼！
                     Thread.sleep(1000);
                     System.out.println("After waiting:" + System.currentTimeMillis());
                 }catch (InterruptedException ex)

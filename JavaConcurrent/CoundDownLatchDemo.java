@@ -10,7 +10,7 @@ import java.util.concurrent.Executors;
  * @date: 2019/1/7 17:42
  */
 public class CoundDownLatchDemo {
-    private static CountDownLatch countDownLatch = new CountDownLatch(10);
+    private static CountDownLatch countDownLatch = new CountDownLatch(5);
 
     private static class Task implements Runnable
     {
@@ -18,8 +18,9 @@ public class CoundDownLatchDemo {
         public void run() {
             try {
                 Thread.sleep((new Random().nextInt(10))*1000);
-                countDownLatch.countDown();
                 System.out.println("Finished " + Thread.currentThread().getId() + " thread");
+                countDownLatch.countDown();
+
             }catch (InterruptedException ex)
             {
                 ex.printStackTrace();
@@ -29,8 +30,8 @@ public class CoundDownLatchDemo {
 
     public static void main(String[] args) throws InterruptedException {
         Task task = new Task();
-        ExecutorService service = Executors.newFixedThreadPool(10);
-        for (int i = 0; i < 10; i++) {
+        ExecutorService service = Executors.newFixedThreadPool(5);
+        for (int i = 0; i < 5; i++) {
             service.submit(task);
         }
 

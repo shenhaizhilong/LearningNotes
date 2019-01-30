@@ -8,6 +8,7 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class FairLock {
     private static ReentrantLock lock = new ReentrantLock(true); // fair lock
+    //private static ReentrantLock lock = new ReentrantLock(); // unfair lock
 
     private static class Task implements Runnable
     {

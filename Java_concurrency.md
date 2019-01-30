@@ -349,10 +349,54 @@ main() 属于非守护线程。
 使用 setDaemon() 方法将一个线程设置为守护线程。
 
 ```java
-public static void main(String[] args) {
-    Thread thread = new Thread(new MyRunnable());
-    thread.setDaemon(true);
+public class DaemonDemo {
+
+    private static class DaemonTask implements Runnable
+    {
+        @Override
+        public void run() {
+
+            try
+            {
+                while (true)
+                {
+                    System.out.println("I am the Daemon thread, haha");
+                    Thread.sleep(100);
+
+                }
+            }catch (InterruptedException ex)
+            {
+                ex.printStackTrace();
+            }
+
+
+        }
+    }
+
+
+    public static void main(String[] args) throws InterruptedException {
+        Thread thread = new Thread(new DaemonTask());
+        thread.setDaemon(true);
+        thread.start();
+        System.out.println("Main thread");
+        Thread.sleep(1000);
+    }
 }
+
+
+ouput:
+Main thread
+I am the Daemon thread, haha
+I am the Daemon thread, haha
+I am the Daemon thread, haha
+I am the Daemon thread, haha
+I am the Daemon thread, haha
+I am the Daemon thread, haha
+I am the Daemon thread, haha
+I am the Daemon thread, haha
+I am the Daemon thread, haha
+I am the Daemon thread, haha
+
 ```
 
 ## sleep()
@@ -360,6 +404,7 @@ public static void main(String[] args) {
 Thread.sleep(millisec) 方法会休眠当前正在执行的线程，millisec 单位为毫秒。
 
 sleep() 可能会抛出 InterruptedException，因为异常不能跨线程传播回 main() 中，因此必须在本地进行处理。线程中抛出的其它异常也同样需要在本地进行处理。
+Thread.sleep(ms) 并不会释放锁；该线程处于 TIMED_WAITING状态
 
 ```java
 public void run() {
@@ -373,7 +418,8 @@ public void run() {
 
 ## yield()
 
-对静态方法 Thread.yield() 的调用声明了当前线程已经完成了生命周期中最重要的部分，可以切换给其它线程来执行。该方法只是对线程调度器的一个建议，而且也只是建议具有相同优先级的其它线程可以运行。
+对静态方法 Thread.yield() 的调用声明了当前线程已经完成了生命周期中最重要的部分，可以切换给其它线程来执行。
+释放cpu 控制权，然后和其他线程共同竞争cpu 的使用权
 
 ```java
 public void run() {
@@ -535,9 +581,12 @@ future.cancel(true);
 
 Java 提供了两种锁机制来控制多个线程对共享资源的互斥访问，第一个是 JVM 实现的 synchronized，而另一个是 JDK 实现的 ReentrantLock。
 
-## synchronized
+## synchronized 
+
+synchronized 可以互斥访问代码临界区，在某一时刻只有一个线程能访问该临界区，其他线程block
 
 **1. 同步一个代码块** 
+> 锁的粒度最小，在某一时刻只有一个线程能访问这个代码块
 
 ```java
 public void func() {
@@ -545,6 +594,15 @@ public void func() {
         // ...
     }
 }
+
+```
+```java
+相当于  lock.lock(this);
+        try {
+           // do sth
+        } finally {
+            lock.unlock(); // release the lock
+        }
 ```
 
 它只作用于同一个对象，如果调用两个对象上的同步代码块，就不会进行同步。
@@ -595,6 +653,7 @@ public static void main(String[] args) {
 
 
 **2. 同步一个方法** 
+> 锁的粒度较大，在某一时刻只有一个线程能访问方法
 
 ```java
 public synchronized void func () {
@@ -605,6 +664,7 @@ public synchronized void func () {
 它和同步代码块一样，作用于同一个对象。
 
 **3. 同步一个类** 
+> 锁的粒度最大，在某一时刻只有一个线程能访问这个类
 
 ```java
 public void func() {
@@ -654,8 +714,10 @@ public synchronized static void fun() {
 作用于整个类。
 
 ## ReentrantLock
+> 顾名思义，重入锁，即可以在同一个线程里面再次获得锁
 
 ReentrantLock 是 java.util.concurrent（J.U.C）包中的锁。
+
 
 ```java
 public class LockExample {
@@ -696,8 +758,7 @@ public static void main(String[] args) {
 synchronized 是 JVM 实现的，而 ReentrantLock 是 JDK 实现的。
 
 **2. 性能** 
-
-新版本 Java 对 synchronized 进行了很多优化，例如自旋锁等，synchronized 与 ReentrantLock 大致相同。
+竞争非常激烈建议用synchronized，否则建议使用 ReentrantLock。
 
 **3. 等待可中断** 
 
@@ -706,18 +767,157 @@ synchronized 是 JVM 实现的，而 ReentrantLock 是 JDK 实现的。
 ReentrantLock 可中断，而 synchronized 不行。
 
 **4. 公平锁** 
+> 公平锁严重影响性能不建议使用
 
 公平锁是指多个线程在等待同一个锁时，必须按照申请锁的时间顺序来依次获得锁。
 
 synchronized 中的锁是非公平的，ReentrantLock 默认情况下也是非公平的，但是也可以是公平的。
 
+```java
+
+public class FairLock {
+    private static ReentrantLock lock = new ReentrantLock(true); // fair lock
+    //private static ReentrantLock lock = new ReentrantLock(); // unfair lock
+
+
+    private static class Task implements Runnable
+    {
+        @Override
+        public void run() {
+            while (true)
+            {
+                try
+                {
+                    lock.lock();
+                    System.out.println("Thread " + Thread.currentThread().getName() + " get the lock");
+                    Thread.sleep(1000);
+                }catch (InterruptedException ex)
+                {
+                    ex.printStackTrace();
+                }
+                finally {
+                    lock.unlock();
+                }
+
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        Task task = new Task();
+        Thread thread1 = new Thread(task, "t1");
+        Thread thread2 = new Thread(task, "t2");
+        thread1.start();
+        thread2.start();
+
+    }
+}
+
+
+公平锁输出
+output:  t1 t2 交替执行
+Thread t1 get the lock
+Thread t2 get the lock
+Thread t1 get the lock
+Thread t2 get the lock
+Thread t1 get the lock
+Thread t2 get the lock
+Thread t1 get the lock
+Thread t2 get the lock
+
+非公平锁输出（）     
+
+Thread t1 get the lock
+Thread t2 get the lock
+Thread t2 get the lock
+Thread t2 get the lock
+Thread t2 get the lock
+Thread t2 get the lock
+
+```
+
+
 **5. 锁绑定多个条件** 
 
 一个 ReentrantLock 可以同时绑定多个 Condition 对象。
 
-## 使用选择
+## ReentrantReadWriteLock ##
+ 读读共享，有写互斥；读写分离，提升性能。
 
-除非需要使用 ReentrantLock 的高级功能，否则优先使用 synchronized。这是因为 synchronized 是 JVM 实现的一种锁机制，JVM 原生地支持它，而 ReentrantLock 不是所有的 JDK 版本都支持。并且使用 synchronized 不用担心没有释放锁而导致死锁问题，因为 JVM 会确保锁的释放。
+```java
+
+public class ReadWriteLockDemo {
+    private int value;
+    private static Lock lock = new ReentrantLock();
+    private static ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
+    private static Lock readLock = readWriteLock.readLock();
+    private static Lock writeLock = readWriteLock.writeLock();
+
+    public int handleRead(Lock currLock)
+    {
+        try
+        {
+            currLock.lock();
+            System.out.println("Thread id:" + Thread.currentThread().getId() +  " Read thread get the lock, and do this job");
+            Thread.sleep(1000);
+            System.out.println("Thread id:" + Thread.currentThread().getId() +  " this job cost 1s");
+        }catch (InterruptedException ex)
+        {
+            ex.printStackTrace();
+        }finally {
+            currLock.unlock();
+        }
+        return value;
+    }
+
+    public void handleWrite(Lock currLock, int index)
+    {
+        try
+        {
+            currLock.lock();
+            value = index;
+            System.out.println("Thread id:" + Thread.currentThread().getId() +  " write thread get the lock, and do this job");
+            Thread.sleep(1000);
+            System.out.println("Thread id:" + Thread.currentThread().getId() +  " this job cost 1s");
+        }catch (InterruptedException ex)
+        {
+            ex.printStackTrace();
+        }finally {
+            currLock.unlock();
+        }
+    }
+
+    public static void main(String[] args) {
+
+        ReadWriteLockDemo readWriteLockDemo = new ReadWriteLockDemo();
+        Runnable read = new Runnable() {
+            @Override
+            public void run() {
+                readWriteLockDemo.handleRead(readLock);  // 读锁
+             //   readWriteLockDemo.handleRead(lock);  // 重入锁
+            }
+        };
+
+        Runnable write = new Runnable() {
+            @Override
+            public void run() {
+                readWriteLockDemo.handleWrite(writeLock, new Random().nextInt()); // 写锁
+              //  readWriteLockDemo.handleWrite(lock, new Random().nextInt());  //重入锁
+            }
+        };
+
+        for (int i = 0; i < 10; i++) {
+            new Thread(read).start();
+        }
+        for (int i = 0; i < 5; i++) {
+            new Thread(write).start();
+        }
+
+    }
+}
+
+
+```
 
 # 六、线程之间的协作
 
@@ -750,7 +950,7 @@ public class JoinExample {
         @Override
         public void run() {
             try {
-                a.join();
+                a.join();   // 等待A 线程执行完毕
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -779,13 +979,39 @@ A
 B
 ```
 
+例二
+```java
+
+public class JoinDemo {
+    private static volatile int counter = 0;
+
+    public static class Increase extends Thread
+    {
+        @Override
+        public void run() {
+            for (int i = 0; i < 1000; i++) {
+                counter++;
+            }
+        }
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        Increase increase = new Increase();
+        increase.start();
+		// 主线程别急，等我干完活，你再继续；否则，你就等着吧！
+        increase.join(); // after running thread increase, then print counter, if no join() counter will be zero;
+        // increase not have enough time to run
+        System.out.println("counter = " + counter);
+    }
+}
+```
 ## wait() notify() notifyAll()
 
 调用 wait() 使得线程等待某个条件满足，线程在等待时会被挂起，当其他线程的运行使得这个条件满足时，其它线程会调用 notify() 或者 notifyAll() 来唤醒挂起的线程。
 
 它们都属于 Object 的一部分，而不属于 Thread。
 
-只能用在同步方法或者同步控制块中使用，否则会在运行时抛出 IllegalMonitorStateException。
+# 只能用在同步方法或者同步控制块中使用，否则会在运行时抛出 IllegalMonitorStateException。 #
 
 使用 wait() 挂起期间，线程会释放锁。这是因为，如果没有释放锁，那么其它线程就无法进入对象的同步方法或者同步控制块中，那么就无法执行 notify() 或者 notifyAll() 来唤醒挂起的线程，造成死锁。
 
@@ -822,10 +1048,63 @@ before
 after
 ```
 
+例二
+
+```java  
+
+public class WaitNotifyDemo {
+    private static Object object = new Object();
+    public static class Wait extends Thread
+    {
+        @Override
+        public void run() {
+            synchronized (object)
+            {
+
+                try
+                {
+                    System.out.println("Started Waiting: " +  System.currentTimeMillis());
+                    object.wait();  // 必须通知我，我才干活;不通知，不干活,哼！
+                    Thread.sleep(1000);
+                    System.out.println("After waiting:" + System.currentTimeMillis());
+                }catch (InterruptedException ex)
+                {
+                    ex.printStackTrace();
+                }
+
+            }
+        }
+    }
+
+    public static class Notify extends Thread
+    {
+        @Override
+        public void run() {
+            synchronized (object)
+            {
+                System.out.println("Started Notify:" + System.currentTimeMillis());
+                object.notify();
+                System.out.println("After Notify:" + System.currentTimeMillis());
+            }
+        }
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        new Wait().start();
+        Thread.sleep(1000);
+        new Notify().start();
+    }
+}
+
+```
+
 **wait() 和 sleep() 的区别** 
 
 - wait() 是 Object 的方法，而 sleep() 是 Thread 的静态方法；
 - wait() 会释放锁，sleep() 不会。
+- wait() 线程处于block状态，sleep() 线程处于time waiting状态
+- wait() 的线程需要其他线程唤醒，sleep() 的线程休眠一段时间自动唤醒
+- wait() 与notify、notifyAll 一般出现在两个线程里面，notify()/notifyAll 唤醒等待的线程
 
 ## await() signal() signalAll()
 
@@ -878,7 +1157,68 @@ public static void main(String[] args) {
 before
 after
 ```
+例二
 
+```java
+public class ReentrantLockCondition {
+    private static ReentrantLock lock = new ReentrantLock();
+    private static Condition condition = lock.newCondition();
+
+    private static class ConditionTask implements Runnable
+    {
+        @Override
+        public void run() {
+            try
+            {
+                System.out.println(" Thread " + Thread.currentThread().getName() + " get the lock");
+                lock.lock();
+                System.out.println(" Thread " + Thread.currentThread().getName() + " await");
+                condition.await();
+                System.out.println(" Thread " + Thread.currentThread().getName() + " get the signal");
+                System.out.println(" Thread " + Thread.currentThread().getName() + " get the lock");
+                System.out.println(" Thread " + Thread.currentThread().getName() + " finished the job");
+
+            }catch (InterruptedException ex)
+            {
+                ex.printStackTrace();
+            }finally {
+                lock.unlock();
+            }
+        }
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        ConditionTask task = new ConditionTask();
+        Thread thread = new Thread(task, "t1");
+        thread.start();
+        System.out.println(" Thread " + Thread.currentThread().getName() + " sleep 2s");
+        Thread.sleep(1000*2);
+        System.out.println(" Thread " + Thread.currentThread().getName() + " get the lock");
+        lock.lock();
+        System.out.println(" Thread " + Thread.currentThread().getName() + " send the signal");
+        condition.signal();
+        lock.unlock();
+        System.out.println(" Thread " + Thread.currentThread().getName() + " released the lock");
+        System.out.println(" Thread " + Thread.currentThread().getName() + " finished the job");
+    }
+}
+
+
+```
+
+```html
+ Thread main sleep 2s
+ Thread t1 get the lock
+ Thread t1 await
+ Thread main get the lock
+ Thread main send the signal
+ Thread main released the lock
+ Thread main finished the job
+ Thread t1 get the signal
+ Thread t1 get the lock
+ Thread t1 finished the job
+
+```
 # 七、J.U.C - AQS
 
 java.util.concurrent（J.U.C）大大提高了并发性能，AQS 被认为是 J.U.C 的核心。
@@ -892,27 +1232,47 @@ java.util.concurrent（J.U.C）大大提高了并发性能，AQS 被认为是 J.
 <div align="center"> <img src="pics/CountdownLatch.png" width=""/> </div><br>
 
 ```java
-public class CountdownLatchExample {
+public class CoundDownLatchDemo {
+    private static CountDownLatch countDownLatch = new CountDownLatch(5);
+
+    private static class Task implements Runnable
+    {
+        @Override
+        public void run() {
+            try {
+                Thread.sleep((new Random().nextInt(10))*1000);
+                System.out.println("Finished " + Thread.currentThread().getId() + " thread");
+                countDownLatch.countDown();
+
+            }catch (InterruptedException ex)
+            {
+                ex.printStackTrace();
+            }
+        }
+    }
 
     public static void main(String[] args) throws InterruptedException {
-        final int totalThread = 10;
-        CountDownLatch countDownLatch = new CountDownLatch(totalThread);
-        ExecutorService executorService = Executors.newCachedThreadPool();
-        for (int i = 0; i < totalThread; i++) {
-            executorService.execute(() -> {
-                System.out.print("run..");
-                countDownLatch.countDown();
-            });
+        Task task = new Task();
+        ExecutorService service = Executors.newFixedThreadPool(5);
+        for (int i = 0; i < 5; i++) {
+            service.submit(task);
         }
+
+        // waiting all tasks finished.
         countDownLatch.await();
-        System.out.println("end");
-        executorService.shutdown();
+        System.out.println("fire!");
+        service.shutdown();
     }
 }
 ```
 
-```html
-run..run..run..run..run..run..run..run..run..run..end
+```java
+Finished 13 thread
+Finished 11 thread
+Finished 15 thread
+Finished 14 thread
+Finished 12 thread
+fire!
 ```
 
 ## CyclicBarrier
