@@ -1301,30 +1301,63 @@ public CyclicBarrier(int parties) {
 <div align="center"> <img src="pics/CyclicBarrier.png" width=""/> </div><br>
 
 ```java
-public class CyclicBarrierExample {
+public class CyclicBarrierDemo {
 
     public static void main(String[] args) {
-        final int totalThread = 10;
-        CyclicBarrier cyclicBarrier = new CyclicBarrier(totalThread);
-        ExecutorService executorService = Executors.newCachedThreadPool();
-        for (int i = 0; i < totalThread; i++) {
-            executorService.execute(() -> {
-                System.out.print("before..");
-                try {
-                    cyclicBarrier.await();
-                } catch (InterruptedException | BrokenBarrierException e) {
-                    e.printStackTrace();
+        int count = 5;
+          CyclicBarrier barrier = new CyclicBarrier(count, ()-> System.out.println("barrier action "));
+        ExecutorService service = Executors.newFixedThreadPool(count);
+        for (int i = 0; i < count; i++) {
+            service.execute(()-> {
+                System.out.println("number waiting: " + barrier.getNumberWaiting());
+                try{
+                    barrier.await();
+                }catch (BrokenBarrierException | InterruptedException ex)
+                {
+                    ex.printStackTrace();
                 }
-                System.out.print("after..");
+                System.out.println("do the work");
+
             });
         }
-        executorService.shutdown();
+
+        barrier.reset();
+        for (int i = 0; i < count; i++) {
+            service.execute(()-> {
+                try{
+                    barrier.await();
+                }catch (BrokenBarrierException | InterruptedException ex)
+                {
+                    ex.printStackTrace();
+                }
+                System.out.println("do the work 2");
+
+            });
+        }
+        service.shutdown();
     }
 }
+
 ```
 
 ```html
-before..before..before..before..before..before..before..before..before..before..after..after..after..after..after..after..after..after..after..after..
+number waiting: 0
+number waiting: 1
+number waiting: 2
+number waiting: 2
+number waiting: 2
+barrier action 
+do the work
+do the work
+do the work
+do the work
+do the work
+barrier action 
+do the work 2
+do the work 2
+do the work 2
+do the work 2
+do the work 2
 ```
 
 ## Semaphore
