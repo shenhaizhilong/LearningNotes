@@ -2389,10 +2389,10 @@ jconsole -> thread -> 检测死锁
 
 <div align="center"> <img src="pics/deadlockJVM.jpg" /> </div><br>
 thread dump  - > same with jstack 
-```html
 
+```html
 Found one Java-level deadlock:
-=============================
+
 "Worker B Thread":
   waiting to lock monitor 0x0000000002dccb78 (object 0x00000000d8488da8, a java.lang.Object),
   which is held by "Worker A Thread"
@@ -2401,7 +2401,7 @@ Found one Java-level deadlock:
   which is held by "Worker B Thread"
 
 Java stack information for the threads listed above:
-===================================================
+
 "Worker B Thread":
         at JavaConcurrent.DeadLock$WorkerB.run(DeadLock.java:46)
         - waiting to lock <0x00000000d8488da8> (a java.lang.Object)
@@ -2417,7 +2417,6 @@ Found 1 deadlock.
 
 ```
 ## 死锁预防##
-
 1、以确定的顺序获得锁： 所有线程锁定的顺序要一致，可以规定锁定 obj1, 然后在锁定obj2
 2、超时放弃，避免无限等待： 当使用synchronized关键词提供的内置锁时，只要线程没有获得锁，那么就会永远等待下去，然而Lock接口提供了boolean tryLock(long time, TimeUnit unit) throws InterruptedException方法，该方法可以按照固定时长等待锁，因此线程可以在获取锁超时以后，主动释放之前已经获得的所有的锁。通过这种方式，也可以很有效地避免死锁。
 3、只锁定需要的：锁的粒度尽量小，你使用哪部分，就锁定哪部分
