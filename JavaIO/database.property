@@ -1,0 +1,4 @@
+jdbc.driver=com.mysql.jdbc.Driver
+jdbc.url=jdbc:mysql://huidemo.mysqldb.chinacloudapi.cn:3306/huidemo
+jdbc.username=huidemo%wasu
+jdbc.password=Me.20172017

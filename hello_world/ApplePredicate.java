@@ -1,0 +1,7 @@
+package hello_world;
+
+
+public interface ApplePredicate
+{
+    boolean test(Apple apple);
+}

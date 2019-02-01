@@ -45,10 +45,78 @@ Java 的 I/O 大概可以分成以下几类：
 - 新的输入/输出：NIO
 
 # 二、磁盘操作
-
+## File 
 File 类可以用于表示文件和目录的信息，但是它不表示文件的内容。
+### 1. Create File:
+javo.io.File 类可以用来创建新的文件。实例化File 对象，然后调用createNewFile()
 
-递归地列出一个目录下所有文件：
+```java
+ public class CreateFile {
+
+    public static void main(String[] args) throws IOException {
+        // use system property file.separator to make our program cross-platform.
+        String fileSep = System.getProperty("file.separator");
+        method1("text1.txt", "1,2,3,4,5");   // writer
+        method2("text2.txt", "1,2,3,4,5");   // output stream
+        method3("text3.txt", "6,7,8,9,10");  // nio
+
+    }
+
+    public  static void method1(String filename, String data)
+    {
+        File file = new File(filename);
+
+        try
+        {
+            if(!file.exists())
+            {
+                boolean hasSuccess = file.createNewFile();
+                if(hasSuccess)
+                {
+                    System.out.println("Created file: " + filename);
+                }else {
+                    System.out.println("File already exists: " + filename);
+                }
+            }
+
+            try(Writer writer = new FileWriter(file))
+            {
+                writer.write(data);
+                writer.flush();
+            }
+
+
+        }catch (IOException ex)
+        {
+            ex.printStackTrace();
+        }
+
+
+
+
+    }
+
+    public static void method2(String filename, String data) throws IOException
+    {
+        try(FileOutputStream outputStream = new FileOutputStream(filename))
+        {
+            outputStream.write(data.getBytes());
+            outputStream.flush();  // flush the data to file
+        }
+
+    }
+
+    public static void method3(String filename, String data) throws IOException
+    {
+        Files.write(Paths.get(filename), data.getBytes());
+    }
+}
+
+```
+
+
+
+### 2. Recursive Print FileName：
 
 ```java
 public static void listAllFiles(File dir) {
@@ -63,32 +131,367 @@ public static void listAllFiles(File dir) {
         listAllFiles(file);
     }
 }
+
+```
+### 3. Recursive Delete File
+```java
+ public static void recursiveDelete(File file)
+    {
+        // no file exists
+        if(file == null ||  !file.exists())return;
+
+        // recursive delete all the file in this directory
+        if(file.isDirectory())
+        {
+            for(File f: file.listFiles())
+            {
+                recursiveDelete(f);
+            }
+        }
+        // delete this file
+        file.delete();
+        System.out.println("delete file: " + file.getAbsolutePath());
+    }
 ```
 
+### 4. Rename File
+rename a file or move a file
+```
+  public class FileRename {
+
+    public static void main(String[] args) {
+
+        File source = new File("text1.txt");
+        File target = new File("text11.md");
+        if(source.renameTo(target))
+        {
+            System.out.println("rename succeed");
+        }else {
+            System.out.println("rename failed");
+        }
+
+        source = new File("text11.md");
+        target = new File("D:/text11.md");
+        if(source.renameTo(target))
+        {
+            System.out.println("rename succeed");
+        }else {
+            System.out.println("rename failed");
+        }
+
+    }
+}
+```
+
+### 5. File Size
+ File.length() /channel.size()/FileUtils.sizeof(file)
+```
+public class GetFileSize {
+
+
+    // by File instance
+    // The length, in bytes, of the file denoted by this abstract pathname, or <code>0L</code> if the file does not exist.
+    public static long getFileSize(File file)
+    {
+        return file.length();
+    }
+
+    // by channel instance
+    public static long getFileSize(Path path)
+    {
+        long fileSize = 0L;
+        try{
+            FileChannel channel = FileChannel.open(path);
+            fileSize = channel.size();
+            channel.close();
+        }catch (IOException ex)
+        {
+            ex.printStackTrace();
+        }
+        return fileSize;
+    }
+
+    public static long getFileSize(String fileName)
+    {
+        File file = new File(fileName);
+        return FileUtils.sizeOf(file);
+    }
+
+
+    public static void main(String[] args) {
+
+        System.out.println(getFileSize(new File("text.txt")));
+        System.out.println(getFileSize(Paths.get("text.txt")));
+        System.out.println(getFileSize("text.txt"));
+    }
+}
+
+```
+### 6. FileNameFilter
+
+Java FileNameFilter 接口 有 boolean accept(File dir, String name) 方法，if accept, then we can add this file to list
+
+
+```
+public class FileNameFilterDemo {
+
+    public static void main(String[] args) {
+        File file = new File("D:/demo");
+        String ext = "txt";
+        File[] files = file.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return name.toLowerCase().endsWith(ext);
+            }
+        });
+
+        for(File f: files)
+        {
+            System.out.println(f.getAbsolutePath());
+        }
+        System.out.println("*******************");
+
+         files = file.listFiles((d,s) -> s.toLowerCase().endsWith(ext) );
+        for(File f: files)
+        {
+            System.out.println(f.getAbsolutePath());
+        }
+
+    }
+}
+```
 从 Java7 开始，可以使用 Paths 和 Files 代替 File。
 
 # 三、字节操作
 
 ## 实现文件复制
+### Steam /Channel/ Apache Commons IO/Files
 
 ```java
-public static void copyFile(String src, String dist) throws IOException {
-    FileInputStream in = new FileInputStream(src);
-    FileOutputStream out = new FileOutputStream(dist);
+  public class CopyFile {
 
-    byte[] buffer = new byte[20 * 1024];
-    int cnt;
+    public static void copyFileBySteam(File source, File target)  throws IOException
+    {
+        InputStream in = null;
+        OutputStream out = null;
+        try
+        {
+            in = new FileInputStream(source);
+            out = new FileOutputStream(target);
+            byte[] buffer = new byte[20*1024];
+            int length;
+            while ((length = in.read(buffer)) > 0)
+            {
+                out.write(buffer, 0, length);
 
-    // read() 最多读取 buffer.length 个字节
-    // 返回的是实际读取的个数
-    // 返回 -1 的时候表示读到 eof，即文件尾
-    while ((cnt = in.read(buffer, 0, buffer.length)) != -1) {
-        out.write(buffer, 0, cnt);
+            }
+            out.flush();
+        }finally {
+            in.close();
+            out.close();
+        }
     }
 
-    in.close();
-    out.close();
+
+    public static void copyFileByChannel(File source, File target) throws IOException
+    {
+        FileChannel in = null;
+        FileChannel out = null;
+        try
+        {
+            in = new FileInputStream(source).getChannel();
+            out = new FileOutputStream(target).getChannel();
+            out.transferFrom(in, 0,  in.size());
+        }finally {
+            in.close();
+            out.close();
+        }
+    }
+
+    public static void copyFileByCommonsIo(File source, File target) throws IOException
+    {
+        FileUtils.copyFile(source, target);
+    }
+
+
+    public static void copyFileByFiles(File source, File target) throws IOException
+    {
+        Files.copy(source.toPath(), target.toPath());
+    }
+
+    public static void testCopy(File source, File target, String name) throws IOException
+    {
+        try
+        {
+            // get the copy file method 
+            Method method = CopyFile.class.getMethod(name, File.class,File.class);
+            long t1 = System.nanoTime();
+            // static method , so the obj is null
+            method.invoke(null, source, target);
+            long t2 = System.nanoTime();
+            System.out.println(String.format("MethodName: {%20s} Cost time: {%s}", name, (t2 - t1)));
+            target.delete();
+
+        }catch (NoSuchMethodException ex)
+        {
+            ex.printStackTrace();
+            System.out.println(ex.getMessage());
+        }catch (IllegalAccessException ex)
+        {
+            System.out.println(ex.getMessage());
+            ex.printStackTrace();
+        }catch (InvocationTargetException ex)
+        {
+            System.out.println(ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args) throws IOException {
+
+        File source = new File("D:\\haiwang.mp4");
+        File target = new File("F:\\haiwang.mp4");
+
+        testCopy(source, target, "copyFileBySteam");
+        testCopy(source, target, "copyFileByChannel");
+        testCopy(source, target, "copyFileByCommonsIo");
+        testCopy(source, target, "copyFileByFiles");
+
+    }
 }
+
+
+output:
+MethodName: {     copyFileBySteam} Cost time: {10831121084}
+MethodName: {   copyFileByChannel} Cost time: {10150842610}
+MethodName: { copyFileByCommonsIo} Cost time: {9178643924}
+MethodName: {     copyFileByFiles} Cost time: {7420124934}
+
+初步测试： copyFileByFiles method 更快一点
+
+将 byte[] buffer = new byte[20*1024]; 改为byte[] buffer = new byte[50*1024]; 对于大文件增加buffer的值copyFileBySteam 的性能可以进一步提升
+MethodName: {     copyFileBySteam} Cost time: {9374476484}
+MethodName: {   copyFileByChannel} Cost time: {11682364988}
+MethodName: { copyFileByCommonsIo} Cost time: {9932202628}
+MethodName: {     copyFileByFiles} Cost time: {7373096424}
+
+```
+### File separator,separatorChar,pathSeparator,pathSeparatorChar
+
+```java
+public class FileSeparator {
+    public static void main(String[] args) {
+        System.out.println("File.separator = " + File.separator);
+        System.out.println("File.separatorChar = " + File.separatorChar);
+        System.out.println("File.pathSeparator = " + File.pathSeparator);
+        System.out.println("File.pathSeparatorChar = " + File.pathSeparatorChar);
+//platform independent and safe to use across Unix and Windows
+        File fileSafe = new File("tmp"+File.separator+"abc.txt");
+    }
+}
+```
+windows:
+```html
+File.separator = \
+File.separatorChar = \
+File.pathSeparator = ;
+File.pathSeparatorChar = ;
+```
+linux
+```html
+File.separator = /
+File.separatorChar = /
+File.pathSeparator = :
+File.pathSeparatorChar = :
+```
+### Read File 
+ 读取文本文件可以使用 Files/FileReader/BufferedReader/scanner/Apache commons IO
+```java
+
+public class ReadFile {
+
+    public static void readByFileReader(String fileName) throws  IOException
+    {
+        System.out.println("Read By File Reader:");
+        File file  = new File(fileName);
+        try(BufferedReader reader = new BufferedReader(new FileReader(file)))
+        {
+            String line = null;
+            while ((line = reader.readLine()) != null)
+            {
+                // handle this line
+                System.out.println(line);
+            }
+        }
+    }
+
+   public static void readByBufferedReader(String fileName, Charset charset) throws IOException
+   {
+       File file = new File(fileName);
+       System.out.println("Read file By Buffered Reader: ");
+       try(BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), charset)))
+       {
+           String line = null;
+           while ((line = reader.readLine()) != null)
+           {
+               // handle this line
+               System.out.println(line);
+           }
+       }
+   }
+
+   public static void readByBufferedReaderJava7(String fileName, Charset charset) throws IOException
+   {
+
+       System.out.println("Read file By Buffered Reader in Java 7: ");
+       Path path = Paths.get(fileName);
+       try(BufferedReader reader = Files.newBufferedReader(path, charset))
+       {
+           String line = null;
+           while ((line = reader.readLine()) != null)
+           {
+               // handle this line
+               System.out.println(line);
+           }
+       }
+   }
+
+   public static void readByScanner(String fileName, String charsetName) throws IOException
+   {
+       System.out.println("Read file By Scanner: ");
+       Path path = Paths.get(fileName);
+       try(Scanner scanner = new Scanner(path, charsetName))
+       {
+           String line = null;
+           while (scanner.hasNextLine())
+           {
+               line = scanner.nextLine();
+               // handle this line;
+               System.out.println(line);
+           }
+       }
+   }
+
+   public static void readByFiles(String fileName) throws IOException
+   {
+       Path path = Paths.get(fileName);
+       List<String> allLines = Files.readAllLines(path, StandardCharsets.UTF_8);
+       System.out.println(allLines);
+
+   }
+
+   public static void readByApacheCommons(String fileName) throws IOException
+   {
+       List<String> allLines = FileUtils.readLines(new File(fileName), StandardCharsets.UTF_8);
+       System.out.println(allLines);
+   }
+
+
+    public static void main(String[] args) throws IOException {
+        readByApacheCommons("text.txt");
+    }
+}
+
 ```
 
 ## 装饰者模式
@@ -620,3 +1023,4 @@ NIO 与普通 I/O 的区别主要有以下两点：
 - [NIO 与传统 IO 的区别](http://blog.csdn.net/shimiso/article/details/24990499)
 - [Decorator Design Pattern](http://stg-tud.github.io/sedc/Lecture/ws13-14/5.3-Decorator.html#mode=document)
 - [Socket Multicast](http://labojava.blogspot.com/2012/12/socket-multicast.html)
+- [java-file-separator-separatorchar-pathseparator](https://www.journaldev.com/851/java-file-separator-separatorchar-pathseparator-pathseparatorchar)
