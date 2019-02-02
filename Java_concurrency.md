@@ -38,6 +38,8 @@
     * [FutureTask](#futuretask)
     * [BlockingQueue](#blockingqueue)
     * [ForkJoin](#forkjoin)
+    * [ConcurrentCollections](#ConcurrentCollections)
+   
 * [九、线程不安全示例](#九线程不安全示例)
 * [十、Java 内存模型](#十java-内存模型)
     * [主内存与工作内存](#主内存与工作内存)
@@ -585,7 +587,7 @@ Java 提供了两种锁机制来控制多个线程对共享资源的互斥访问
 
 ## synchronized 
 
-synchronized 可以互斥访问代码临界区，在某一时刻只有一个线程能访问该临界区，其他线程block
+synchronized 可以互斥访问代码临界区，在某一时刻只有一个线程能访问该临界区，其他线程block;可重入（避免死锁、单个线程可以重复拿到某个锁）、不可中断、异常自动释放锁
 
 **1. 同步一个代码块** 
 > 锁的粒度最小，在某一时刻只有一个线程能访问这个代码块
@@ -714,6 +716,9 @@ public synchronized static void fun() {
 ```
 
 作用于整个类。
+
+
+
 
 ## ReentrantLock
 > 顾名思义，重入锁，即可以在同一个线程里面再次获得锁
@@ -1694,6 +1699,20 @@ public class ForkJoinPool extends AbstractExecutorService
 ForkJoinPool 实现了工作窃取算法来提高 CPU 的利用率。每个线程都维护了一个双端队列，用来存储需要执行的任务。工作窃取算法允许空闲的线程从其它线程的双端队列中窃取一个任务来执行。窃取的任务必须是最晚的任务，避免和队列所属线程发生竞争。例如下图中，Thread2 从 Thread1 的队列中拿出最晚的 Task1 任务，Thread1 会拿出 Task2 来执行，这样就避免发生竞争。但是如果队列中只有一个任务时还是会发生竞争。
 
 <div align="center"> <img src="pics/15b45dc6-27aa-4519-9194-f4acfa2b077f.jpg" width=""/> </div><br>
+
+## ConcurrentCollections
+### ConcurrentHashMap
+jdk 1.8 以前：[用分离锁实现多个线程间的并发写操作](https://www.ibm.com/developerworks/cn/java/java-lo-concurrenthashmap/index.html#N1009C)
+jdk 1.8 取消了基于 Segment 的分段锁思想，[改用CAS + synchronized 控制并发操作; 数据结构：数组+（链表/红黑树)](https://zhuanlan.zhihu.com/p/54624363)
+
+### ConcurrentLinkedQueue
+### ConcurrentLinkedDeque
+### ConcurrentSkipListMap
+### ConcurrentSkipListSet
+### CopyOnWriteArrayList
+### CopyOnWriteArraySet 
+
+
 
 # 九、线程不安全示例
 
