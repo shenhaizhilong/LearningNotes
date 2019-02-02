@@ -2368,12 +2368,12 @@ Found one Java-level deadlock:
 Java stack information for the threads listed above:
 ===================================================
 "Worker B Thread":
-        at JavaConcurrent.DeadLock$WorkerB.run(DeadLock.java:46)
+        at JavaConcurrency.DeadLock$WorkerB.run(DeadLock.java:46)
         - waiting to lock <0x00000000d7f95418> (a java.lang.Object)
         - locked <0x00000000d7f95428> (a java.lang.Object)
         at java.lang.Thread.run(Thread.java:748)
 "Worker A Thread":
-        at JavaConcurrent.DeadLock$WorkerA.run(DeadLock.java:24)
+        at JavaConcurrency.DeadLock$WorkerA.run(DeadLock.java:24)
         - waiting to lock <0x00000000d7f95428> (a java.lang.Object)
         - locked <0x00000000d7f95418> (a java.lang.Object)
         at java.lang.Thread.run(Thread.java:748)
@@ -2403,12 +2403,12 @@ Found one Java-level deadlock:
 Java stack information for the threads listed above:
 
 "Worker B Thread":
-        at JavaConcurrent.DeadLock$WorkerB.run(DeadLock.java:46)
+        at JavaConcurrency.DeadLock$WorkerB.run(DeadLock.java:46)
         - waiting to lock <0x00000000d8488da8> (a java.lang.Object)
         - locked <0x00000000d8490710> (a java.lang.Object)
         at java.lang.Thread.run(Thread.java:748)
 "Worker A Thread":
-        at JavaConcurrent.DeadLock$WorkerA.run(DeadLock.java:24)
+        at JavaConcurrency.DeadLock$WorkerA.run(DeadLock.java:24)
         - waiting to lock <0x00000000d8490710> (a java.lang.Object)
         - locked <0x00000000d8488da8> (a java.lang.Object)
         at java.lang.Thread.run(Thread.java:748)
