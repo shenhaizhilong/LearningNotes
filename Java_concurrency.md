@@ -589,8 +589,8 @@ Java 提供了两种锁机制来控制多个线程对共享资源的互斥访问
 
 synchronized 可以互斥访问代码临界区，在某一时刻只有一个线程能访问该临界区，其他线程block;可重入（避免死锁、单个线程可以重复拿到某个锁）、不可中断、异常自动释放锁
 
-**1. 同步一个代码块** 
-> 锁的粒度最小，在某一时刻只有一个线程能访问这个代码块
+**1. 同步一个对象** 
+> 锁的粒度最小，在某一时刻只有一个线程能访问这个代码块，每一个对象对应一个对象锁 --> 对象锁
 
 ```java
 public void func() {
@@ -607,6 +607,17 @@ public void func() {
         } finally {
             lock.unlock(); // release the lock
         }
+```
+
+私有锁：使用私有锁可以减小锁的粒度，减小由锁产生的性能开销；私有锁与对象锁不会产生竞争，类锁与对象锁也不会产生竞争
+```
+private Object lock = new Object();
+public void func()
+{
+	synchroized(lock){
+		// do sth
+		}
+}
 ```
 
 它只作用于同一个对象，如果调用两个对象上的同步代码块，就不会进行同步。
@@ -657,7 +668,7 @@ public static void main(String[] args) {
 
 
 **2. 同步一个方法** 
-> 锁的粒度较大，在某一时刻只有一个线程能访问方法
+> 锁的粒度较大，在某一时刻只有一个线程能访问方法--> 对象锁
 
 ```java
 public synchronized void func () {
@@ -668,7 +679,7 @@ public synchronized void func () {
 它和同步代码块一样，作用于同一个对象。
 
 **3. 同步一个类** 
-> 锁的粒度最大，在某一时刻只有一个线程能访问这个类
+> 锁的粒度最大，在某一时刻只有一个线程能访问这个类，每个类只有一个类锁--> 类锁
 
 ```java
 public void func() {
@@ -709,13 +720,14 @@ public static void main(String[] args) {
 
 **4. 同步一个静态方法** 
 
+
 ```java
 public synchronized static void fun() {
     // ...
 }
 ```
 
-作用于整个类。
+作用于整个类，是类锁
 
 
 
@@ -765,7 +777,10 @@ public static void main(String[] args) {
 synchronized 是 JVM 实现的，而 ReentrantLock 是 JDK 实现的。
 
 **2. 性能** 
-竞争非常激烈建议用synchronized，否则建议使用 ReentrantLock。
+
+在 JDK 1.6 之前，synchronized 是重量级锁，效率低下。
+从 JDK 1.6 开始，synchronized 做了很多优化，如偏向锁、轻量级锁、自旋锁、适应性自旋锁、锁消除、锁粗化等技术来减少锁操作的开销。
+synchronized 同步锁一共包含四种状态：无锁、偏向锁、轻量级锁、重量级锁，它会随着竞争情况逐渐升级。synchronized 同步锁可以升级但是不可以降级，目的是为了提高获取锁和释放锁的效率。竞争非常激烈建议用synchronized，否则建议使用 ReentrantLock。
 
 **3. 等待可中断** 
 
@@ -925,6 +940,9 @@ public class ReadWriteLockDemo {
 
 
 ```
+
+**6. 超时机制** 
+超时后不会获得锁，因此不会造成死锁
 
 # 六、线程之间的协作
 
@@ -1710,6 +1728,7 @@ jdk 1.8 取消了基于 Segment 的分段锁思想，[改用CAS + synchronized �
 ### ConcurrentSkipListMap
 ### ConcurrentSkipListSet
 ### CopyOnWriteArrayList
+https://segmentfault.com/a/1190000016931825
 ### CopyOnWriteArraySet 
 
 

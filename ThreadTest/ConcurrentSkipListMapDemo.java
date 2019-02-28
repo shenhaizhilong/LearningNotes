@@ -9,7 +9,6 @@ public class ConcurrentSkipListMapDemo {
         Map<Integer, Integer> map = new ConcurrentSkipListMap<>();
         for (int i = 0; i < 20; i++) {
             int a = new Random().nextInt(100);
-            System.out.println(a);
             map.put(i, a);
 
         }

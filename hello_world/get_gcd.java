@@ -22,8 +22,7 @@ public class get_gcd {
 		
 		System.out.println(gcd(5,0));
 		System.out.println(gcd(7,10));
-		
-		
+
 		
 	}
 	
