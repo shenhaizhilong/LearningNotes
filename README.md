@@ -31,5 +31,15 @@ ___
 - [Socket](Socket.md)
 ## 工具
 - [Git](Git.md)
+
+
+
+## 分布式
+- [SnowFlake](SnowFlake.md)
+
+## 其他
+- [指定GC次数](指定GC次数.md)
+
+
 ## 书籍
 - [Book](Book.md)
